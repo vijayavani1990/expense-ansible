@@ -41,7 +41,7 @@
     state: present
 
 - name: Load the schema
-  ansible.builtin.shell: mysql -h 172.31.7.72 -uroot -pExpenseApp@1 < /app/schema/backend.sql
+  ansible.builtin.shell: mysql -h mysql-dev.vijayavanimanju.online -uroot -pExpenseApp@1 < /app/schema/backend.sql
 
 - name: Import ELK role - Filebeat
   ansible.builtin.import_role:
