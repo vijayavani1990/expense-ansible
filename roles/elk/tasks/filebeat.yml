@@ -1,0 +1,33 @@
+- name: Copy Rsyslog conf
+  ansible.builtin.template:
+    src: rsyslog.conf
+    dest: /etc/rsyslog.d/{{component}}.conf
+  when: is_rsyslog_needed
+
+- name: Restart Rsyslog service
+  ansible.builtin.systemd:
+    name: rsyslog
+    state: restarted
+  when: is_rsyslog_needed
+
+- name: Copy elastic YUM Repo file
+  ansible.builtin.template:
+    src: elastic.repo
+    dest: /etc/yum.repos.d/elastic.repo
+
+- name: Install filebeat
+  ansible.builtin.dnf:
+    name: filebeat
+    state: installed
+
+- name: Copy filebeat configuration
+  ansible.builtin.template:
+    src: filebeat.yml
+    dest: /etc/filebeat/filebeat.yml
+
+- name: Restart filebeat
+  ansible.builtin.systemd:
+    name: filebeat
+    state: restarted
+    enabled: yes
+

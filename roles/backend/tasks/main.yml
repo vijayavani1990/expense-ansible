@@ -1,0 +1,62 @@
+- name: Set HostName
+  ansible.builtin.shell: set-hostname {{env}}-{{component}}
+
+- name: Disable nodejs default version
+  ansible.builtin.shell: dnf module disable nodejs -y
+
+- name: Enable nodejs 18 version
+  ansible.builtin.shell: dnf module enable nodejs:18 -y
+
+- name: Install nodejs 18 version
+  ansible.builtin.dnf:
+    name: nodejs
+    state: present
+
+- name: create backend service file
+  ansible.builtin.template:
+    src: backend.service
+    dest: /etc/systemd/system/backend.service
+
+- name: Create Application user
+  ansible.builtin.user:
+    name: expense
+
+- name: Import common role - App prerequisite
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-prereq
+  vars:
+    app_dir: /app
+    component: backend
+    app_user: expense
+
+- name: Download nodejs dependencies
+  ansible.builtin.shell: npm install
+  args:
+    chdir: /app
+
+- name: Install mysql client to load the Schema
+  ansible.builtin.dnf:
+    name: mysql
+    state: present
+
+- name: Load the schema
+  ansible.builtin.shell: mysql -h {{ lookup('amazon.aws.aws_ssm', 'frontend.dev.BACKEND_ENDPOINT', region='us-east-1' ) }} -u{{ lookup('amazon.aws.aws_ssm', 'DB_USERNAME', region='us-east-1' ) }} -p{{ lookup('amazon.aws.aws_ssm', 'mysql.password', region='us-east-1' ) }} < /app/schema/backend.sql
+
+- name: Import ELK role - Filebeat
+  ansible.builtin.import_role:
+    name: elk
+    tasks_from: filebeat
+
+- name: Restart backend service
+  ansible.builtin.systemd:
+    name: backend
+    state: restarted
+    enabled: yes
+    daemon-reload: yes
+
+- name: Import Prometheus - Node Exporter
+  ansible.builtin.import_role:
+    name: prometheus
+    tasks_from: node-exporter
+
