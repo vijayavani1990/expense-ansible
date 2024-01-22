@@ -41,7 +41,7 @@
     state: present
 
 - name: Load the schema
-  ansible.builtin.shell: mysql -h mysql-dev.vijayavanimanju.online -uroot -pExpenseApp@1 < /app/schema/backend.sql
+  ansible.builtin.shell: mysql -h "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{component}}.DB_HOST', region='us-east-1' ) }}" -u"{{ lookup('amazon.aws.aws_ssm', 'DB_USERNAME', region='us-east-1' ) }}" -p"{{ lookup('amazon.aws.aws_ssm', 'mysql.password', region='us-east-1' ) }}" < /app/schema/backend.sql
 
 - name: Import ELK role - Filebeat
   ansible.builtin.import_role:
