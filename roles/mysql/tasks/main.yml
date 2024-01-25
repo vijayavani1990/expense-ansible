@@ -1,5 +1,5 @@
 - name: Set HostName
-  ansible.builtin.shell: set-hostname {{env}}-{{component}}
+  ansible.builtin.shell: set-hostname "mysql"
 
 - name: Disable existing mysql module
   ansible.builtin.shell: dnf module disable mysql -y
